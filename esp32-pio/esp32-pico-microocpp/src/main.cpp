@@ -1,38 +1,59 @@
 #include <Arduino.h>
+#include "driver/uart.h"
+#include "esp_log.h"
 
-// Define UART1 pins for loopback
-#define TXD1 4  // GPIO4 as TX
-#define RXD1 5  // GPIO5 as RX
+// Define UART pins and configuration
+#define TXD_PIN (GPIO_NUM_4) // GPIO4 as TX
+#define RXD_PIN (GPIO_NUM_5) // GPIO5 as RX
+#define UART_PORT_NUM UART_NUM_1
+#define BUF_SIZE (1024)
 
 void setup() {
-    // Initialize the default UART (UART0) for debugging
+    // Initialize Serial Monitor for debugging
     Serial.begin(115200);
     while (!Serial) {
-        ; // Wait for Serial port to connect (required for native USB)
+        ; // Wait for Serial to connect
     }
-    Serial.println("Starting ESP32-C3 UART Loopback Test...");
+    Serial.println("ESP32-C3 UART Communication Test");
 
-    // Initialize predefined UART1 for loopback
-    Serial1.begin(115200, SERIAL_8N1, RXD1, TXD1);
-    Serial.println("UART1 initialized: TX(GPIO4), RX(GPIO5)");
+    // UART configuration
+    uart_config_t uart_config = {
+        .baud_rate = 115200,            // Baud rate
+        .data_bits = UART_DATA_8_BITS, // Data bits: 8
+        .parity = UART_PARITY_DISABLE, // No parity
+        .stop_bits = UART_STOP_BITS_1, // Stop bits: 1
+        .flow_ctrl = UART_HW_FLOWCTRL_DISABLE, // No flow control
+        .rx_flow_ctrl_thresh = 122,    // RX flow control threshold (not used here)
+    };
+
+    // Configure UART parameters
+    ESP_ERROR_CHECK(uart_param_config(UART_PORT_NUM, &uart_config));
+
+    // Set UART pins (TX, RX, RTS, CTS)
+    ESP_ERROR_CHECK(uart_set_pin(UART_PORT_NUM, TXD_PIN, RXD_PIN, UART_PIN_NO_CHANGE, UART_PIN_NO_CHANGE));
+
+    // Install UART driver and create buffer
+    ESP_ERROR_CHECK(uart_driver_install(UART_PORT_NUM, BUF_SIZE, BUF_SIZE, 0, NULL, 0));
+
+    Serial.println("UART initialized successfully");
 }
 
 void loop() {
-    static uint32_t counter = 0;
-    String messageToSend = "Hello from ESP32-C3! Count: " + String(counter) + "\n";
+    char rx_buffer[128]; // Buffer for incoming data
+    const char *tx_message = "Hello from ESP32-C3\r\n";
 
-    // Send data via UART1 TX
-    Serial1.print(messageToSend);
-    Serial.print("[DEBUG] Sent: ");
-    Serial.print(messageToSend);
+    // Transmit data to STM32
+    int tx_bytes = uart_write_bytes(UART_PORT_NUM, tx_message, strlen(tx_message));
+    Serial.printf("Sent to STM32: %s (%d bytes)\n", tx_message, tx_bytes);
 
-    // Wait to receive data from UART1 RX
-    while (Serial1.available()) {
-        char receivedChar = Serial1.read(); // Read one character
-        Serial.print(receivedChar);        // Print received data to debug UART
+    // Check for incoming data
+    int rx_bytes = uart_read_bytes(UART_PORT_NUM, (uint8_t *)rx_buffer, sizeof(rx_buffer) - 1, 100 / portTICK_PERIOD_MS);
+    if (rx_bytes > 0) {
+        rx_buffer[rx_bytes] = '\0'; // Null-terminate received string
+        Serial.printf("Received from STM32: %s\n", rx_buffer);
+    } else {
+        Serial.println("No data received from STM32");
     }
 
-    Serial.println(); // Add a newline for readability in debug prints
-    counter++;
-    delay(1000); // Send data every second
+    delay(2000); // Delay for 2 seconds
 }
