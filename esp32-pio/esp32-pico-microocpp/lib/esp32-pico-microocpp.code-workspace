@@ -1,0 +1,12 @@
+{
+	"folders": [
+		{
+			"path": ".."
+		},
+		{
+			"name": "esp32-pi-uarttx",
+			"path": "../../esp32-pi-uarttx"
+		}
+	],
+	"settings": {}
+}
