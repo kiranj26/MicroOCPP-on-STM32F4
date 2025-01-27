@@ -10,7 +10,7 @@ This project establishes **bidirectional UART communication** between an **ESP32
 ## Demo Video
 
 ### Hardware
-<video controls src="WhatsApp Video 2025-01-26 at 7.46.59 PM.mp4" title="Title"></video>
+https://github.com/user-attachments/assets/be38b73d-9e1d-455a-bb69-684df0e44c3d
 
 
 ### Serial Terminal    
