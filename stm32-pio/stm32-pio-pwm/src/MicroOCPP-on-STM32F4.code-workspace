@@ -1,0 +1,24 @@
+{
+	"folders": [
+		{
+			"path": "../../.."
+		},
+		{
+			"name": "stm32-pio-blink",
+			"path": "../../stm32-pio-blink"
+		},
+		{
+			"name": "stm32-pio-pushbutton",
+			"path": "../../stm32-pio-pushbutton"
+		},
+		{
+			"name": "stm32-pio-pwm",
+			"path": ".."
+		}
+	],
+	"settings": {
+		"files.associations": {
+			"stm32f0xx_hal.h": "c"
+		}
+	}
+}
